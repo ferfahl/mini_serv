@@ -5,12 +5,14 @@
 #include <stdio.h>
 #include <netinet/in.h>
 
+// estrutura do cliente, guardando o id do cliente e o fd de onde ele está conectando
 typedef struct client 
 {
     int fd;
     int id;
 } client;
 
+// mensagem de erro no strerr, saindo com codigo 1
 void exit_error(char *str) 
 {
     write(2, str, strlen(str));
@@ -19,26 +21,29 @@ void exit_error(char *str)
 
 int main(int argc, char **argv)
 {
-    if (argc != 2) 
+    if (argc != 2) //verificando qtd de argumentos
     {
         exit_error("Wrong number of arguments\n");
     }
 
-    const int MAX_CLIENTS = 128;
-    const int BUFFER_SIZE = 200000;
-    client clients[MAX_CLIENTS];
-    int next_id = 0;
-    fd_set active_sockets, ready_sockets;
+    const int MAX_CLIENTS = 128; // criando uma espécie de define para máximo de clientes permitidos no servidor
+    const int BUFFER_SIZE = 200000; // criando uma espécie de define para buffer maximo do programa
+    client clients[MAX_CLIENTS]; //usando a estrutura do cliente, define o máximo de clientes do que foi definido como máximo
+    int next_id = 0; // inicializa o contador de clientes
+    fd_set active_sockets, ready_sockets; // The fd_set data type represents file descriptor sets for the select function.
+	// três buffers diferentes setados com o "define" do buffersize
     char buffer[BUFFER_SIZE];
     char msg_buffer[BUFFER_SIZE];
     char sub_buffer[BUFFER_SIZE];
-    int server_socket;
+    int server_socket; // variável int para ter as informações relativas ao socket
 
+	// verifica se o socket novo é menor do que 0, se não, retorna o valor do novo socket do servidor
     if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
     {
         exit_error("Fatal error\n");
     }
 
+	// A estrutura SOCKADDR_IN especifica um endereço de transporte e uma porta para a família de endereços AF_INET .
     struct sockaddr_in server_address = {0};
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
