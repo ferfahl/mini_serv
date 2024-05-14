@@ -107,13 +107,42 @@ int main(int argc, char **argv)
     while (42) {
         ready_sockets = active_sockets;
         /*int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+        `int nfds`: Este é o parâmetro mais alto entre todos os descritores de arquivo (file descriptors) passados 
+        para o `select()`, mais 1. É necessário porque `select()` examina os descritores de arquivo de 0 a `nfds - 1`.
+        Este parâmetro é usado principalmente para otimização e não precisa ser exato, apenas um valor maior ou igual
+        ao maior descritor de arquivo sendo monitorado.
+        `fd_set *readfds`: Este é um ponteiro para um conjunto (`fd_set`) de descritores de arquivo que serão 
+        monitorados para leitura. Se um descritor de arquivo neste conjunto estiver pronto para leitura, a 
+        função `select()` retornará. Se você não estiver interessado em monitorar descritores de arquivo para 
+        leitura, pode passar `NULL`.
+        `fd_set *writefds`: Semelhante ao `readfds`, este é um ponteiro para um conjunto de descritores de arquivo
+        que serão monitorados para escrita. Se um descritor de arquivo neste conjunto estiver pronto para escrita,
+        a função `select()` retornará. Se você não estiver interessado em monitorar descritores de arquivo para escrita,
+        pode passar `NULL`.
+        `fd_set *exceptfds`: Este é um ponteiro para um conjunto de descritores de arquivo que serão monitorados para
+        exceções. Se um descritor de arquivo neste conjunto estiver em um estado excepcional, a função `select()`
+        retornará. Se você não estiver interessado em monitorar exceções, pode passar `NULL`.
+        `struct timeval *timeout`: Este é um ponteiro para uma estrutura `timeval` que define um limite de tempo
+        para o `select()` esperar por atividade nos descritores de arquivo. Se `timeout` for `NULL`, `select()`
+        será bloqueado até que ocorra atividade em algum dos descritores de arquivo. Se `timeout` for definido
+        como 0 (zero), `select()` retornará imediatamente após verificar os descritores de arquivo uma vez.
+        Se `timeout` for definido para um valor positivo, `select()` esperará até que ocorra atividade ou até que o
+        tempo limite seja atingido.
+
         */
         if (select(max_socket + 1, &ready_sockets, NULL, NULL, NULL) < 0) 
         {
             exit_error("Fatal error\n");
         }
+
         for (int socket_id = 0; socket_id <= max_socket; socket_id++) 
         {
+            /*int  FD_ISSET(int fd, fd_set *set);
+            FD_ISSET()
+              select() modifies the  contents  of the sets according to the rules described below.  After  calling 
+              select(), the FD_ISSET() macro can be used to test if a  file  descriptor is  still present in a set.
+              FD_IS‐SET() returns nonzero if the  file descriptor fd  is present in set,
+              and zero if it is not.*/
             if (!FD_ISSET(socket_id, &ready_sockets)) 
             {
                 continue ;
@@ -123,6 +152,26 @@ int main(int argc, char **argv)
             {
                 int client_socket;
 
+                /*int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+                return -1 if error
+                Claro! A função `accept()` é comumente usada em sistemas Unix para aceitar uma conexão TCP entrante
+                em um socket de servidor. Aqui está uma explicação dos parâmetros dessa função:
+                1. `int sockfd`: Este é o descritor de arquivo (file descriptor) do socket de servidor que está
+                esperando por conexões. O socket de servidor deve estar previamente criado, vinculado a um endereço
+                e ouvindo por conexões usando a função `listen()`.
+                2. `struct sockaddr *addr`: Este é um ponteiro para uma estrutura `sockaddr` na qual o endereço do
+                cliente será armazenado se a conexão for aceita com sucesso. Como `accept()` é usada comumente com
+                sockets de domínio AF_INET (IPv4), normalmente você passa um ponteiro para uma estrutura `sockaddr_in`
+                que será preenchida com o endereço do cliente.
+                3. `socklen_t *addrlen`: Este é um ponteiro para uma variável do tipo `socklen_t` que contém o tamanho
+                da estrutura apontada por `addr`. Antes de chamar `accept()`, você deve definir o valor dessa variável
+                como o tamanho da estrutura `sockaddr` passada. Após a chamada de `accept()`, o valor de `addrlen` será
+                atualizado para refletir o tamanho real do endereço do cliente.
+                A função `accept()` retorna um novo descritor de arquivo (file descriptor) que representa a conexão TCP
+                estabelecida com o cliente. Esse novo descritor de arquivo pode ser usado para enviar e receber dados
+                da conexão com o cliente. Se ocorrer um erro, `accept()` retorna -1 e define `errno` para indicar o
+                tipo de erro ocorrido.
+                */
                 if ((client_socket = accept(server_socket, NULL, NULL)) < 0) 
                 {
                     exit_error("Fatal error\n");
@@ -138,23 +187,39 @@ int main(int argc, char **argv)
                         send(clients[i].fd, buffer, strlen(buffer), 0);
                     }
                 }
-            } else {
+            }
+            
+            else
+            {
                 int bytes_read = recv(socket_id, buffer, sizeof(buffer) - 1, 0);
 
                 if (bytes_read <= 0) 
                 {
                     bzero(msg_buffer, BUFFER_SIZE);
+                    /*int sprintf(char *str, const char *format, ...);
+                    A função sprintf() é uma função da linguagem de programação C (e também disponível em C++)
+                    que é usada para formatar e armazenar strings em um buffer. Ela é usada de maneira semelhante
+                    à função printf(), mas em vez de imprimir a string formatada no console, ela a armazena em um
+                    array de caracteres (string).*/
                     sprintf(msg_buffer, "server: client %d just left\n", clients[socket_id].id);
                     for (int i = 0; i < MAX_CLIENTS; i++) 
                     {
                         if (clients[i].fd != socket_id && clients[i].fd != 0) 
                         {
+                            /*ssize_t send(int sockfd, const void *buf, size_t len, int flags);
+                            */
                             send(clients[i].fd, msg_buffer, strlen(msg_buffer), 0);
                         }
                     }
                     close(socket_id);
+                    /*void FD_CLR(int fd, fd_set *set);
+                    FD_CLR()
+                    This macro removes the  file  descriptor fd from set.  Removing a file descriptor 
+                    that is not present in the set is a  no-op, and does not produce an error.*/
                     FD_CLR(socket_id, &active_sockets);
-                } else {
+                }
+                else
+                {
                     for (int i = 0, j = strlen(sub_buffer); i < bytes_read; i++, j++) {
                         sub_buffer[j] = buffer[i];
                         if (sub_buffer[j] == '\n') {
@@ -174,7 +239,10 @@ int main(int argc, char **argv)
                     }
                 }
             }
+
         }
+
+
     }
     return 0;
 }
