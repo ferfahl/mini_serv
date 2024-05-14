@@ -1,0 +1,174 @@
+write
+	#include <unistd.h>
+	ssize_t  write(int  fd, const void *buf, size_t count);
+	write() writes up to count bytes from the  buffer  starting at buf to the file referred to by
+	the file descriptor fd.
+	On success, the number of bytes written is returned (zero indicates nothing was written).  On
+	error, -1 is returned, and errno is set appropriately.
+close
+	#include <unistd.h>
+	int close(int fd);
+	close() closes a file descriptor, so that it no longer refers to any file and may be reused.
+	close() returns zero on success.  On error, -1 is returned, and errno is set appropriately.
+
+select
+	#include <sys/select.h>
+	int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+	select() allows a program to monitor multiple file descriptors, waiting until one or more of the file descriptors
+	become "ready" for some class of I/O operation (e.g., input possible).  A file descriptor is considered ready if
+	it is possible to perform the corresponding I/O operation (e.g., read(2)) without blocking.
+
+socket
+	#include <sys/types.h>          /* See NOTES */
+	#include <sys/socket.h>
+	int socket(int domain, int type, int protocol);
+	socket() creates an endpoint for communication and returns a file descriptor that refers to that endpoint.
+	The file descriptor returned by a successful call will be the lowest-numbered file descriptor not currently open
+	for the process.
+	For further details, see socket(2).
+
+accept
+	#include <sys/types.h>          /* See NOTES */
+	#include <sys/socket.h>
+	int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+	accept() extracts the first connection request on the queue of pending connections, creates a new socket with the
+	same socket type protocol and address family as sockfd, and allocates a new file descriptor for that socket.
+	The newly created socket is not in the listening state.  The original socket sockfd is unaffected by this call.
+	On success, these system calls return a nonnegative integer that is a file descriptor for the accepted socket.
+	On error, -1 is returned, and errno is set appropriately.
+
+listen
+	#include <sys/types.h>          /* See NOTES */
+	#include <sys/socket.h>
+	int listen(int sockfd, int backlog);
+	listen() marks the socket referred to by sockfd as a passive socket, that is, as a socket that will be used to
+	accept incoming connection requests using accept(2).
+	The sockfd argument is a file descriptor that refers to a socket of type SOCK_STREAM or SOCK_SEQPACKET.
+	backlog defines the maximum length to which the queue of pending connections for sockfd may grow.
+	If a connection request arrives when the queue is full, the client may receive an error with an indication
+	of ECONNREFUSED.
+
+send
+	#include <sys/types.h>
+	#include <sys/socket.h>
+	ssize_t send(int sockfd, const void *buf, size_t len, int flags);
+	send() sends a message on a socket.  The send() call may be used only when the socket is in a connected state
+	(such as SOCK_STREAM, SOCK_SEQPACKET).  The flags argument is 0.
+	On success, these calls return the number of bytes sent.  On error, -1 is returned, and errno is set appropriately.
+
+recv
+	#include <sys/types.h>
+	#include <sys/socket.h>
+	ssize_t recv(int sockfd, void *buf, size_t len, int flags);
+	recv() receives a message from a socket, and return the number of bytes received.  The flags argument is 0.
+	When a stream socket peer has performed an orderly shutdown, the return value will be 0 (the traditional "end-of-file"),
+	and the flag MSG_PEEK is not set.
+	On success, these calls return the number of bytes received.  On error, -1 is returned, and errno is set appropriately.
+
+bind
+	#include <sys/types.h>          /* See NOTES */
+	#include <sys/socket.h>
+	int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+	bind() assigns the address specified by addr to the socket referred to by the file descriptor sockfd.
+	addrlen specifies the size, in bytes, of the address structure pointed to by addr.  Traditionally, this operation
+	is called "assigning a name to a socket".
+	It is normally necessary to assign a local address using bind() before a SOCK_STREAM socket may receive connections
+	(see accept(2)).
+	The rules used in name binding vary between address families.  Consult the manual entries in Section 7 for detailed
+	information.
+
+strstr
+	#include <string.h>
+	char *strstr(const char *haystack, const char *needle);
+	The strstr() function finds the first occurrence of the substring needle in the string haystack.  The terminating null
+	bytes ('\0') are not compared.
+
+malloc
+	#include <stdlib.h>
+	void *malloc(size_t size);
+	The malloc() function allocates size bytes and returns a pointer to the allocated memory.  The memory is not
+	initialized.
+	If size is 0, then malloc() returns either NULL, or a unique pointer value that can later be successfully passed
+	to free().
+
+realloc
+	#include <stdlib.h>
+	void *realloc(void *ptr, size_t size);
+	The realloc() function changes the size of the memory block pointed to by ptr to size bytes.  The contents will be
+	unchanged in the range from the start of the region up to the minimum of the old and new sizes.  If the new size is
+	larger than the old size, the added memory will not be initialized.  If ptr is NULL, then the call is equivalent to
+	malloc(size), for all values of size; if size is equal to zero, and ptr is not NULL, then the call is equivalent to
+	free(ptr).  Unless ptr is NULL, it must have been returned by an earlier call to malloc(), calloc() or realloc().
+	If the area pointed to was moved, a free(ptr) is done.
+
+free
+	#include <stdlib.h>
+	void free(void *ptr);
+	The free() function frees the memory space pointed to by ptr, which must have been returned by a previous call to
+	malloc(), calloc() or realloc().  Otherwise, or if free(ptr) has already been called before, undefined behavior occurs.
+	If ptr is NULL, no operation is performed.
+
+calloc
+	#include <stdlib.h>
+	void *calloc(size_t nmemb, size_t size);
+	The calloc() function allocates memory for an array of nmemb elements of size bytes each and returns a pointer to the
+	allocated memory.  The memory is set to zero.  If nmemb or size is 0, then calloc() returns either NULL, or a unique
+	pointer value that can later be successfully passed to free().
+	Freeing this pointer will free the memory allocated by calloc().
+
+bzero
+	#include <strings.h>
+	void bzero(void *s, size_t n);
+	The bzero() function erases the data in the n bytes of the memory starting at the location pointed to by s, by writing
+	zeros (bytes containing '\0') to that area.
+
+atoi
+	#include <stdlib.h>
+	int atoi(const char *nptr);
+	The atoi() function converts the initial portion of the string pointed to by nptr to int.  The behavior is the same as
+	strtol(nptr, NULL, 10); except that atoi() does not detect errors.
+
+sprintf
+	#include <stdio.h>
+	int sprintf(char *str, const char *format, ...);
+	The sprintf() function writes the output to the string str.  The function sprintf() is similar to printf(3), but the
+	output is written into the character string str.
+
+strlen
+	#include <string.h>
+	size_t strlen(const char *s);
+	The strlen() function calculates the length of the string s, excluding the terminating null byte ('\0').
+
+exit
+	#include <stdlib.h>
+	void exit(int status);
+	The exit() function causes normal process termination and the value of status & 0377 is returned to the parent.
+
+strcpy
+	#include <string.h>
+	char *strcpy(char *dest, const char *src);
+	The strcpy() function copies the string pointed to by src, including the terminating null byte ('\0'), to the buffer
+	pointed to by dest.  The strings may not overlap, and the destination string dest must be large enough to receive the
+	copy.
+
+strcat
+	#include <string.h>
+	char *strcat(char *dest, const char *src);
+	The strcat() function appends the src string to the dest string, overwriting the terminating null byte ('\0') at the
+	end of dest, and then adds a terminating null byte.  The strings may not overlap, and the dest string must have enough
+	space for the result.
+
+memset
+	#include <string.h>
+	void *memset(void *s, int c, size_t n);
+	The memset() function fills the first n bytes of the memory area pointed to by s with the constant byte c.
+
+htonl
+	#include <arpa/inet.h>
+	uint32_t htonl(uint32_t hostlong);
+	The htonl() function converts the unsigned integer hostlong from host byte order to network byte order.
+
+htons
+	#include <arpa/inet.h>
+	uint16_t htons(uint16_t hostshort);
+	The htons() function converts the unsigned short integer hostshort from host byte order to network byte order.

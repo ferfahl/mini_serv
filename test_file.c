@@ -66,6 +66,7 @@ int main(int argc, char **argv)
     Em outras palavras, quando você se conecta a 127.0.0.1, está se conectando ao seu próprio computador.*/
     server_address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     // binds the port passed as arg
+    /*uint16_t htons(uint16_t hostshort);*/
     server_address.sin_port = htons(atoi(argv[1]));
 
     /*bind - bind a name to a socket
