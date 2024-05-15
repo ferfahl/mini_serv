@@ -5,6 +5,7 @@ write
 	the file descriptor fd.
 	On success, the number of bytes written is returned (zero indicates nothing was written).  On
 	error, -1 is returned, and errno is set appropriately.
+
 close
 	#include <unistd.h>
 	int close(int fd);
