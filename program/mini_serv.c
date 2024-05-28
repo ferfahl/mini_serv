@@ -6,7 +6,7 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 
-#define MAX_CLIENTS 128
+// #define MAX_CLIENTS 128
 // #define BUFFER_SIZE 200000
 
 typedef struct s_client
@@ -21,12 +21,24 @@ void	exit_error_message(char *str)
 	exit(1);
 }
 
+void	msg_clients(char *str, t_client *clients, int fd)
+{
+	const int MAX_CLIENTS = 128;
+
+	for (int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if (clients[i].fd != 0 && clients[i].fd != fd)
+			send(clients[i].fd, str, strlen(str), 0);
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	if (argc != 2)
 		exit_error_message("Wrong number of arguments\n");
 
 	const int BUFFER_SIZE = 200000;
+	const int MAX_CLIENTS = 128;
 	t_client clients[MAX_CLIENTS];
 	int next_id = 0;
 	int server_socket;
@@ -74,12 +86,7 @@ int main(int argc, char *argv[])
 				clients[client_socket].fd = client_socket;
 				clients[client_socket].id = next_id++;
 				sprintf(buffer, "server: client %d just arrived\n", clients[client_socket].id);
-				for (int i = 0; i < MAX_CLIENTS; i++) {
-					if (clients[i].fd != 0 && clients[i].fd != client_socket) 
-					{
-						send(clients[i].fd, buffer, strlen(buffer), 0);
-					}
-				}
+				msg_clients(buffer, clients, client_socket);
 			}
 			else
 			{
@@ -89,11 +96,7 @@ int main(int argc, char *argv[])
 				{
 					bzero(msg_buffer, BUFFER_SIZE);
 					sprintf(msg_buffer, "server: client %d just left\n", clients[socket_id].id);
-					for (int i = 0; i < MAX_CLIENTS; i++) 
-					{
-						if (clients[i].fd != socket_id && clients[i].fd != 0)
-							send(clients[i].fd, msg_buffer, strlen(msg_buffer), 0);
-					}
+					msg_clients(msg_buffer, clients, socket_id);
 					close(socket_id);
 					FD_CLR(socket_id, &active_sockets);
 				}
@@ -107,11 +110,7 @@ int main(int argc, char *argv[])
 							bzero(msg_buffer, BUFFER_SIZE);
 							sprintf(msg_buffer, "client %d: %s\n", clients[socket_id].id, sub_buffer);
 							
-							for (int i = 0; i < MAX_CLIENTS; i++) 
-							{
-								if (clients[i].fd != socket_id && clients[i].fd != 0) 
-									send(clients[i].fd, msg_buffer, strlen(msg_buffer), 0);
-							}
+							msg_clients(msg_buffer, clients, socket_id);
 							bzero(sub_buffer, strlen(sub_buffer));
 							j = -1;
 						}
