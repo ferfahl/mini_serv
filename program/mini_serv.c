@@ -82,7 +82,8 @@ int main(int argc, char *argv[])
 				if ((client_socket = accept(server_socket, NULL, NULL)) < 0)
 					exit_error_message("Fatal error\n");
 				FD_SET(client_socket, &active_sockets);
-				max_socket = (client_socket > max_socket) ? client_socket : max_socket;
+				if (client_socket > max_socket)
+					max_socket = client_socket;
 				clients[client_socket].fd = client_socket;
 				clients[client_socket].id = next_id++;
 				sprintf(buffer, "server: client %d just arrived\n", clients[client_socket].id);

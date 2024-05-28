@@ -192,6 +192,14 @@ int main(int argc, char **argv)
 			
 			else
 			{
+				/* ssize_t recv(int sockfd, void *buf, size_t len, int flags);
+				 The recv(), recvfrom(), and recvmsg() calls are used to receive messages
+				from a socket. They may be used  to receive data on both connectionless
+				and connection-oriented sockets.
+				This page first describes common features of all three system calls,  and
+				then  describes  the  differences between the calls.
+				The recv() call is normally used only on a connected socket (see connect(2)).
+				It is equivalent to the call: recvfrom(fd, buf, len, flags, NULL, 0);*/
 				int bytes_read = recv(socket_id, buffer, sizeof(buffer) - 1, 0);
 
 				if (bytes_read <= 0) 
