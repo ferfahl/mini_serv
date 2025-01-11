@@ -26,6 +26,7 @@ void    err(char  *msg)
     exit(1);
 }
 
+
 void    send_to_all(int except)
 {
     for (int fd = 0; fd <= maxfd; fd++)
